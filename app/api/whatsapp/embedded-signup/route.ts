@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'; import { getUser } from '@/lib/auth';
+export async function POST(req:Request){const user=await getUser();if(!user)return NextResponse.json({error:'Unauthorized'},{status:401});const body=await req.json().catch(()=>({}));return NextResponse.json({ok:true,next:'/api/whatsapp/connect',userId:user.id,received:{businessId:body.businessId||null,phoneNumberId:body.phoneNumberId||null}});}
