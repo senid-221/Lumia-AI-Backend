@@ -157,6 +157,7 @@ model Order {
   business   Business   @relation(fields:[businessId], references:[id], onDelete:Cascade)
   customer   Customer   @relation(fields:[customerId], references:[id], onDelete:Cascade)
   items      OrderItem[]
+  commissions Commission[]
   @@index([businessId,createdAt])
 }
 model OrderItem {
@@ -222,7 +223,6 @@ model CustomerMemory {
   @@unique([businessId,customerId,key])
   @@index([businessId,customerId])
 }
-
 model Merchant {
   id            String          @id @default(cuid())
   businessId    String
@@ -306,7 +306,9 @@ model Commission {
   createdAt     DateTime           @default(now())
   merchant      Merchant           @relation(fields:[merchantId], references:[id], onDelete:Cascade)
   product       MarketplaceProduct @relation(fields:[productId], references:[id])
+  order         Order              @relation(fields:[orderId], references:[id], onDelete:Cascade)
   @@index([merchantId,createdAt])
+  @@index([orderId])
 }
 model Payout {
   id          String        @id @default(cuid())
