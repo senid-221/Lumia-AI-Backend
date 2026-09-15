@@ -4,6 +4,11 @@ datasource db { provider = "postgresql" url = env("DATABASE_URL") }
 enum Role { OWNER ADMIN AGENT }
 enum OrderStatus { PENDING CONFIRMED PROCESSING READY DELIVERED CANCELLED }
 enum MessageRole { USER ASSISTANT SYSTEM }
+enum MerchantStatus { PENDING ACTIVE SUSPENDED }
+enum ProductSourceType { MANUAL API CSV PARTNER }
+enum ChannelType { WHATSAPP INSTAGRAM FACEBOOK TIKTOK }
+enum ChannelStatus { DISCONNECTED CONNECTED ERROR }
+enum PayoutStatus { PENDING PROCESSING PAID FAILED }
 
 model User {
   id           String       @id @default(cuid())
@@ -38,6 +43,9 @@ model Business {
   subscription       Subscription?
   usageRecords       UsageRecord[]
   customerMemories   CustomerMemory[]
+  merchants          Merchant[]
+  socialChannels     SocialChannel[]
+  socialLeads        SocialLead[]
 }
 model Membership {
   id         String   @id @default(cuid())
@@ -69,6 +77,7 @@ model Customer {
   conversations Conversation[]
   orders        Order[]
   memories      CustomerMemory[]
+  socialLeads   SocialLead[]
   @@unique([businessId,phone])
   @@index([businessId])
 }
@@ -145,8 +154,8 @@ model Order {
   currency   String      @default("RWF")
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  business   Business    @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  customer   Customer    @relation(fields:[customerId], references:[id], onDelete:Cascade)
+  business   Business   @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  customer   Customer   @relation(fields:[customerId], references:[id], onDelete:Cascade)
   items      OrderItem[]
   @@index([businessId,createdAt])
 }
@@ -212,4 +221,134 @@ model CustomerMemory {
   customer   Customer @relation(fields:[customerId], references:[id], onDelete:Cascade)
   @@unique([businessId,customerId,key])
   @@index([businessId,customerId])
+}
+
+model Merchant {
+  id            String          @id @default(cuid())
+  businessId    String
+  displayName   String
+  status        MerchantStatus  @default(PENDING)
+  contactPhone  String?
+  contactEmail  String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  business      Business        @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  stores        MerchantStore[]
+  sources       ProductSource[]
+  products      MarketplaceProduct[]
+  commissions   Commission[]
+  payouts       Payout[]
+  @@index([businessId,status])
+}
+model MerchantStore {
+  id          String   @id @default(cuid())
+  merchantId  String
+  name        String
+  platform    String?
+  externalId  String?
+  storeUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  merchant    Merchant @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  sources     ProductSource[]
+  @@index([merchantId,active])
+}
+model ProductSource {
+  id            String           @id @default(cuid())
+  merchantId    String
+  storeId       String?
+  type          ProductSourceType
+  name          String
+  endpoint      String?
+  active        Boolean          @default(true)
+  lastSyncedAt  DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  merchant      Merchant         @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  store         MerchantStore?   @relation(fields:[storeId], references:[id], onDelete:SetNull)
+  products      MarketplaceProduct[]
+  @@index([merchantId,active])
+}
+model MarketplaceProduct {
+  id              String             @id @default(cuid())
+  merchantId      String
+  sourceId        String?
+  externalId      String?
+  sku             String?
+  name            String
+  description     String?
+  imageUrl        String?
+  costPrice       Decimal            @db.Decimal(14,2)
+  sellingPrice    Decimal            @db.Decimal(14,2)
+  currency        String             @default("RWF")
+  stock           Int                @default(0)
+  commissionRate  Decimal            @db.Decimal(7,4) @default(0)
+  active          Boolean            @default(true)
+  lastSyncedAt    DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  merchant        Merchant           @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  source          ProductSource?     @relation(fields:[sourceId], references:[id], onDelete:SetNull)
+  commissions     Commission[]
+  @@index([merchantId,active])
+  @@index([name])
+}
+model Commission {
+  id            String             @id @default(cuid())
+  merchantId    String
+  productId     String
+  orderId       String
+  grossAmount   Decimal            @db.Decimal(14,2)
+  commission    Decimal            @db.Decimal(14,2)
+  merchantNet   Decimal            @db.Decimal(14,2)
+  currency      String             @default("RWF")
+  createdAt     DateTime           @default(now())
+  merchant      Merchant           @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  product       MarketplaceProduct @relation(fields:[productId], references:[id])
+  @@index([merchantId,createdAt])
+}
+model Payout {
+  id          String        @id @default(cuid())
+  merchantId  String
+  amount      Decimal       @db.Decimal(14,2)
+  currency    String        @default("RWF")
+  status      PayoutStatus  @default(PENDING)
+  reference   String?
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  merchant    Merchant      @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  @@index([merchantId,status])
+}
+model SocialChannel {
+  id             String        @id @default(cuid())
+  businessId     String
+  type           ChannelType
+  status         ChannelStatus @default(DISCONNECTED)
+  externalPageId String?
+  externalUserId String?
+  accessTokenRef String?
+  metadata       Json?
+  connectedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  business       Business      @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  leads          SocialLead[]
+  @@unique([businessId,type])
+  @@index([businessId,status])
+}
+model SocialLead {
+  id             String        @id @default(cuid())
+  businessId     String
+  channelId      String
+  customerId     String?
+  externalUserId String?
+  sourceUrl      String?
+  campaign       String?
+  createdAt      DateTime       @default(now())
+  business       Business       @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  channel        SocialChannel @relation(fields:[channelId], references:[id], onDelete:Cascade)
+  customer       Customer?      @relation(fields:[customerId], references:[id], onDelete:SetNull)
+  @@index([businessId,createdAt])
 }
