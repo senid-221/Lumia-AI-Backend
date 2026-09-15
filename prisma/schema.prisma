@@ -1,5 +1,11 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 enum Role { OWNER ADMIN AGENT }
 enum OrderStatus { PENDING CONFIRMED PROCESSING READY DELIVERED CANCELLED }
@@ -20,6 +26,7 @@ model User {
   memberships  Membership[]
   sessions     Session[]
 }
+
 model Business {
   id                 String            @id @default(cuid())
   name               String
@@ -47,6 +54,7 @@ model Business {
   socialChannels     SocialChannel[]
   socialLeads        SocialLead[]
 }
+
 model Membership {
   id         String   @id @default(cuid())
   userId     String
@@ -57,6 +65,7 @@ model Membership {
   @@unique([userId,businessId])
   @@index([businessId])
 }
+
 model Session {
   id        String   @id @default(cuid())
   userId    String
@@ -65,6 +74,7 @@ model Session {
   user      User     @relation(fields:[userId], references:[id], onDelete:Cascade)
   @@index([userId])
 }
+
 model Customer {
   id            String         @id @default(cuid())
   businessId    String
@@ -81,6 +91,7 @@ model Customer {
   @@unique([businessId,phone])
   @@index([businessId])
 }
+
 model Conversation {
   id         String    @id @default(cuid())
   businessId String
@@ -93,6 +104,7 @@ model Conversation {
   messages   Message[]
   @@index([businessId,updatedAt])
 }
+
 model Message {
   id             String       @id @default(cuid())
   conversationId String
@@ -104,6 +116,7 @@ model Message {
   @@index([conversationId,createdAt])
   @@unique([conversationId,externalId])
 }
+
 model Product {
   id          String      @id @default(cuid())
   businessId  String
@@ -119,6 +132,7 @@ model Product {
   orderItems  OrderItem[]
   @@index([businessId,active])
 }
+
 model KnowledgeItem {
   id         String          @id @default(cuid())
   businessId String
@@ -131,6 +145,7 @@ model KnowledgeItem {
   chunks     KnowledgeChunk[]
   @@index([businessId])
 }
+
 model KnowledgeChunk {
   id              String        @id @default(cuid())
   businessId      String
@@ -145,6 +160,7 @@ model KnowledgeChunk {
   @@unique([knowledgeItemId,chunkIndex])
   @@index([businessId])
 }
+
 model Order {
   id         String      @id @default(cuid())
   businessId String
@@ -154,12 +170,13 @@ model Order {
   currency   String      @default("RWF")
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  business   Business   @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  customer   Customer   @relation(fields:[customerId], references:[id], onDelete:Cascade)
+  business   Business    @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  customer   Customer    @relation(fields:[customerId], references:[id], onDelete:Cascade)
   items      OrderItem[]
   commissions Commission[]
   @@index([businessId,createdAt])
 }
+
 model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
@@ -169,6 +186,7 @@ model OrderItem {
   order     Order    @relation(fields:[orderId], references:[id], onDelete:Cascade)
   product   Product  @relation(fields:[productId], references:[id])
 }
+
 model WhatsAppAccount {
   id            String   @id @default(cuid())
   businessId    String   @unique
@@ -178,6 +196,7 @@ model WhatsAppAccount {
   updatedAt     DateTime @updatedAt
   business      Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
 }
+
 model Subscription {
   id           String   @id @default(cuid())
   businessId   String   @unique
@@ -189,6 +208,7 @@ model Subscription {
   updatedAt    DateTime @updatedAt
   business     Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
 }
+
 model UsageRecord {
   id          String   @id @default(cuid())
   businessId  String
@@ -202,6 +222,7 @@ model UsageRecord {
   business    Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
   @@unique([businessId,period])
 }
+
 model WebhookEvent {
   id         String   @id @default(cuid())
   provider   String
@@ -210,6 +231,7 @@ model WebhookEvent {
   createdAt  DateTime @default(now())
   @@index([provider,createdAt])
 }
+
 model CustomerMemory {
   id         String   @id @default(cuid())
   businessId String
@@ -223,6 +245,7 @@ model CustomerMemory {
   @@unique([businessId,customerId,key])
   @@index([businessId,customerId])
 }
+
 model Merchant {
   id            String          @id @default(cuid())
   businessId    String
@@ -240,6 +263,7 @@ model Merchant {
   payouts       Payout[]
   @@index([businessId,status])
 }
+
 model MerchantStore {
   id          String   @id @default(cuid())
   merchantId  String
@@ -254,6 +278,7 @@ model MerchantStore {
   sources     ProductSource[]
   @@index([merchantId,active])
 }
+
 model ProductSource {
   id            String           @id @default(cuid())
   merchantId    String
@@ -270,6 +295,7 @@ model ProductSource {
   products      MarketplaceProduct[]
   @@index([merchantId,active])
 }
+
 model MarketplaceProduct {
   id              String             @id @default(cuid())
   merchantId      String
@@ -294,22 +320,24 @@ model MarketplaceProduct {
   @@index([merchantId,active])
   @@index([name])
 }
+
 model Commission {
-  id            String             @id @default(cuid())
+  id            String              @id @default(cuid())
   merchantId    String
   productId     String
   orderId       String
-  grossAmount   Decimal            @db.Decimal(14,2)
-  commission    Decimal            @db.Decimal(14,2)
-  merchantNet   Decimal            @db.Decimal(14,2)
-  currency      String             @default("RWF")
-  createdAt     DateTime           @default(now())
-  merchant      Merchant           @relation(fields:[merchantId], references:[id], onDelete:Cascade)
-  product       MarketplaceProduct @relation(fields:[productId], references:[id])
-  order         Order              @relation(fields:[orderId], references:[id], onDelete:Cascade)
+  grossAmount   Decimal             @db.Decimal(14,2)
+  commission    Decimal             @db.Decimal(14,2)
+  merchantNet   Decimal             @db.Decimal(14,2)
+  currency      String              @default("RWF")
+  createdAt     DateTime            @default(now())
+  merchant      Merchant            @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  product       MarketplaceProduct  @relation(fields:[productId], references:[id])
+  order         Order               @relation(fields:[orderId], references:[id], onDelete:Cascade)
   @@index([merchantId,createdAt])
   @@index([orderId])
 }
+
 model Payout {
   id          String        @id @default(cuid())
   merchantId  String
@@ -323,6 +351,7 @@ model Payout {
   merchant    Merchant      @relation(fields:[merchantId], references:[id], onDelete:Cascade)
   @@index([merchantId,status])
 }
+
 model SocialChannel {
   id             String        @id @default(cuid())
   businessId     String
@@ -340,6 +369,7 @@ model SocialChannel {
   @@unique([businessId,type])
   @@index([businessId,status])
 }
+
 model SocialLead {
   id             String        @id @default(cuid())
   businessId     String
