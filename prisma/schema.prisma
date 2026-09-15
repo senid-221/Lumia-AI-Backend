@@ -68,7 +68,7 @@ model User {
   name         String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  memberships Membership[]
+  memberships  Membership[]
   sessions     Session[]
 }
 
@@ -86,7 +86,7 @@ model Business {
   updatedAt          DateTime          @updatedAt
   memberships        Membership[]
   customers          Customer[]
-  products           Product[]
+  products            Product[]
   knowledge          KnowledgeItem[]
   knowledgeChunks    KnowledgeChunk[]
   conversations      Conversation[]
@@ -105,9 +105,9 @@ model Membership {
   userId     String
   businessId String
   role       Role     @default(AGENT)
-  user       User     @relation(fields:[userId], references:[id], onDelete:Cascade)
-  business   Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  @@unique([userId,businessId])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([userId, businessId])
   @@index([businessId])
 }
 
@@ -116,7 +116,7 @@ model Session {
   userId    String
   tokenHash String   @unique
   expiresAt DateTime
-  user      User     @relation(fields:[userId], references:[id], onDelete:Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId])
 }
 
@@ -128,12 +128,12 @@ model Customer {
   externalId    String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  business      Business       @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
   conversations Conversation[]
   orders        Order[]
   memories      CustomerMemory[]
   socialLeads   SocialLead[]
-  @@unique([businessId,phone])
+  @@unique([businessId, phone])
   @@index([businessId])
 }
 
@@ -144,10 +144,10 @@ model Conversation {
   status     String    @default("AI")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  business   Business  @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  customer   Customer  @relation(fields:[customerId], references:[id], onDelete:Cascade)
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   messages   Message[]
-  @@index([businessId,updatedAt])
+  @@index([businessId, updatedAt])
 }
 
 model Message {
@@ -157,9 +157,9 @@ model Message {
   content        String
   externalId     String?
   createdAt      DateTime     @default(now())
-  conversation   Conversation @relation(fields:[conversationId], references:[id], onDelete:Cascade)
-  @@index([conversationId,createdAt])
-  @@unique([conversationId,externalId])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  @@index([conversationId, createdAt])
+  @@unique([conversationId, externalId])
 }
 
 model Product {
@@ -167,26 +167,26 @@ model Product {
   businessId  String
   name        String
   description String?
-  price       Decimal     @db.Decimal(14,2)
+  price       Decimal     @db.Decimal(14, 2)
   currency    String      @default("RWF")
   stock       Int         @default(0)
   active      Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  business    Business    @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  business    Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
-  @@index([businessId,active])
+  @@index([businessId, active])
 }
 
 model KnowledgeItem {
-  id         String          @id
+  id         String          @id @default(cuid())
   businessId String
   title      String
   content    String
   source     String?
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
-  business   Business        @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  business   Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
   chunks     KnowledgeChunk[]
   @@index([businessId])
 }
@@ -200,26 +200,26 @@ model KnowledgeChunk {
   embedding       Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  business        Business      @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  knowledgeItem   KnowledgeItem @relation(fields:[knowledgeItemId], references:[id], onDelete:Cascade)
-  @@unique([knowledgeItemId,chunkIndex])
+  business        Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  knowledgeItem   KnowledgeItem @relation(fields: [knowledgeItemId], references: [id], onDelete: Cascade)
+  @@unique([knowledgeItemId, chunkIndex])
   @@index([businessId])
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  businessId String
-  customerId String
-  status     OrderStatus @default(PENDING)
-  total      Decimal     @db.Decimal(14,2)
-  currency   String      @default("RWF")
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  business   Business    @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  customer   Customer    @relation(fields:[customerId], references:[id], onDelete:Cascade)
-  items      OrderItem[]
+  id          String        @id @default(cuid())
+  businessId  String
+  customerId  String
+  status      OrderStatus   @default(PENDING)
+  total       Decimal       @db.Decimal(14, 2)
+  currency    String        @default("RWF")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer    Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items       OrderItem[]
   commissions Commission[]
-  @@index([businessId,createdAt])
+  @@index([businessId, createdAt])
 }
 
 model OrderItem {
@@ -227,9 +227,9 @@ model OrderItem {
   orderId   String
   productId String
   quantity  Int
-  unitPrice Decimal  @db.Decimal(14,2)
-  order     Order    @relation(fields:[orderId], references:[id], onDelete:Cascade)
-  product   Product  @relation(fields:[productId], references:[id])
+  unitPrice Decimal  @db.Decimal(14, 2)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
 }
 
 model WhatsAppAccount {
@@ -239,7 +239,7 @@ model WhatsAppAccount {
   accessToken   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  business      Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 }
 
 model Subscription {
@@ -247,11 +247,11 @@ model Subscription {
   businessId   String   @unique
   plan         String   @default("STARTER")
   status       String   @default("TRIALING")
-  monthlyPrice Decimal  @db.Decimal(14,2) @default(0)
+  monthlyPrice Decimal  @db.Decimal(14, 2) @default(0)
   renewsAt     DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  business     Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  business     Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
 }
 
 model UsageRecord {
@@ -264,8 +264,8 @@ model UsageRecord {
   whatsappOut Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  business    Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  @@unique([businessId,period])
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  @@unique([businessId, period])
 }
 
 model WebhookEvent {
@@ -274,7 +274,7 @@ model WebhookEvent {
   externalId String   @unique
   payload    Json
   createdAt  DateTime @default(now())
-  @@index([provider,createdAt])
+  @@index([provider, createdAt])
 }
 
 model CustomerMemory {
@@ -285,28 +285,28 @@ model CustomerMemory {
   value      String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  business   Business @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  customer   Customer @relation(fields:[customerId], references:[id], onDelete:Cascade)
-  @@unique([businessId,customerId,key])
-  @@index([businessId,customerId])
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  @@unique([businessId, customerId, key])
+  @@index([businessId, customerId])
 }
 
 model Merchant {
-  id            String          @id @default(cuid())
+  id            String         @id @default(cuid())
   businessId    String
   displayName   String
-  status        MerchantStatus  @default(PENDING)
+  status        MerchantStatus @default(PENDING)
   contactPhone  String?
   contactEmail  String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  business      Business        @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
   stores        MerchantStore[]
   sources       ProductSource[]
   products      MarketplaceProduct[]
   commissions   Commission[]
   payouts       Payout[]
-  @@index([businessId,status])
+  @@index([businessId, status])
 }
 
 model MerchantStore {
@@ -319,82 +319,82 @@ model MerchantStore {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  merchant    Merchant @relation(fields:[merchantId], references:[id], onDelete:Cascade)
+  merchant    Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   sources     ProductSource[]
-  @@index([merchantId,active])
+  @@index([merchantId, active])
 }
 
 model ProductSource {
-  id            String           @id @default(cuid())
-  merchantId    String
-  storeId       String?
-  type          ProductSourceType
-  name          String
-  endpoint      String?
-  active        Boolean          @default(true)
-  lastSyncedAt  DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  merchant      Merchant         @relation(fields:[merchantId], references:[id], onDelete:Cascade)
-  store         MerchantStore?   @relation(fields:[storeId], references:[id], onDelete:SetNull)
-  products      MarketplaceProduct[]
-  @@index([merchantId,active])
+  id           String            @id @default(cuid())
+  merchantId   String
+  storeId      String?
+  type         ProductSourceType
+  name         String
+  endpoint     String?
+  active       Boolean           @default(true)
+  lastSyncedAt DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  merchant     Merchant          @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  store        MerchantStore?    @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  products     MarketplaceProduct[]
+  @@index([merchantId, active])
 }
 
 model MarketplaceProduct {
-  id              String             @id @default(cuid())
-  merchantId      String
-  sourceId        String?
-  externalId      String?
-  sku             String?
-  name            String
-  description     String?
-  imageUrl        String?
-  costPrice       Decimal            @db.Decimal(14,2)
-  sellingPrice    Decimal            @db.Decimal(14,2)
-  currency        String             @default("RWF")
-  stock           Int                @default(0)
-  commissionRate  Decimal            @db.Decimal(7,4) @default(0)
-  active          Boolean            @default(true)
-  lastSyncedAt    DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  merchant        Merchant           @relation(fields:[merchantId], references:[id], onDelete:Cascade)
-  source          ProductSource?     @relation(fields:[sourceId], references:[id], onDelete:SetNull)
-  commissions     Commission[]
-  @@index([merchantId,active])
+  id             String       @id @default(cuid())
+  merchantId     String
+  sourceId       String?
+  externalId     String?
+  sku            String?
+  name           String
+  description    String?
+  imageUrl       String?
+  costPrice      Decimal      @db.Decimal(14, 2)
+  sellingPrice   Decimal      @db.Decimal(14, 2)
+  currency       String       @default("RWF")
+  stock          Int          @default(0)
+  commissionRate Decimal      @db.Decimal(7, 4) @default(0)
+  active         Boolean      @default(true)
+  lastSyncedAt   DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  merchant       Merchant     @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  source         ProductSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  commissions    Commission[]
+  @@index([merchantId, active])
   @@index([name])
 }
 
 model Commission {
-  id            String              @id @default(cuid())
-  merchantId    String
-  productId     String
-  orderId       String
-  grossAmount   Decimal             @db.Decimal(14,2)
-  commission    Decimal             @db.Decimal(14,2)
-  merchantNet   Decimal             @db.Decimal(14,2)
-  currency      String              @default("RWF")
-  createdAt     DateTime            @default(now())
-  merchant      Merchant            @relation(fields:[merchantId], references:[id], onDelete:Cascade)
-  product       MarketplaceProduct  @relation(fields:[productId], references:[id])
-  order         Order               @relation(fields:[orderId], references:[id], onDelete:Cascade)
-  @@index([merchantId,createdAt])
+  id          String            @id @default(cuid())
+  merchantId  String
+  productId   String
+  orderId     String
+  grossAmount Decimal           @db.Decimal(14, 2)
+  commission  Decimal           @db.Decimal(14, 2)
+  merchantNet Decimal           @db.Decimal(14, 2)
+  currency    String            @default("RWF")
+  createdAt   DateTime          @default(now())
+  merchant    Merchant          @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  product     MarketplaceProduct @relation(fields: [productId], references: [id])
+  order       Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@index([merchantId, createdAt])
   @@index([orderId])
 }
 
 model Payout {
-  id          String        @id @default(cuid())
-  merchantId  String
-  amount      Decimal       @db.Decimal(14,2)
-  currency    String        @default("RWF")
-  status      PayoutStatus  @default(PENDING)
-  reference   String?
-  paidAt      DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  merchant    Merchant      @relation(fields:[merchantId], references:[id], onDelete:Cascade)
-  @@index([merchantId,status])
+  id         String       @id @default(cuid())
+  merchantId String
+  amount     Decimal      @db.Decimal(14, 2)
+  currency   String       @default("RWF")
+  status     PayoutStatus @default(PENDING)
+  reference  String?
+  paidAt     DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  merchant   Merchant     @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  @@index([merchantId, status])
 }
 
 model SocialChannel {
@@ -409,10 +409,10 @@ model SocialChannel {
   connectedAt    DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  business       Business      @relation(fields:[businessId], references:[id], onDelete:Cascade)
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   leads          SocialLead[]
-  @@unique([businessId,type])
-  @@index([businessId,status])
+  @@unique([businessId, type])
+  @@index([businessId, status])
 }
 
 model SocialLead {
@@ -424,8 +424,8 @@ model SocialLead {
   sourceUrl      String?
   campaign       String?
   createdAt      DateTime      @default(now())
-  business       Business       @relation(fields:[businessId], references:[id], onDelete:Cascade)
-  channel        SocialChannel @relation(fields:[channelId], references:[id], onDelete:Cascade)
-  customer       Customer?      @relation(fields:[customerId], references:[id], onDelete:SetNull)
-  @@index([businessId,createdAt])
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  channel        SocialChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  customer       Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  @@index([businessId, createdAt])
 }
