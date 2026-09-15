@@ -4,9 +4,75 @@ import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function SignUpPage(){
- const router=useRouter();const [form,setForm]=useState({name:'',email:'',password:'',businessName:''});const [error,setError]=useState('');const [loading,setLoading]=useState(false);
- function change(k:string,v:string){setForm(f=>({...f,[k]:v}))}
- async function submit(e:FormEvent){e.preventDefault();setError('');setLoading(true);try{const r=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Unable to create account');router.push('/dashboard')}catch(err){setError(err instanceof Error?err.message:'Unable to create account')}finally{setLoading(false)}}
- return <main className="auth-wrap"><section className="auth-visual"><Link href="/" className="logo"><span className="logo-mark">L</span><span className="brand">Lumia<span className="gradient-text"> AI</span></span></Link><div><h1>Build a smarter way to sell.</h1><p>Create your workspace and give your business an AI employee that can help customers, understand your products and support growth.</p></div><div className="auth-points"><div className="auth-point"><span className="check">✓</span> One workspace for your whole business</div><div className="auth-point"><span className="check">✓</span> Customer memory and business knowledge</div><div className="auth-point"><span className="check">✓</span> Ready for social commerce</div></div></section><section className="auth-panel"><div className="auth-box"><h2>Create your workspace</h2><p className="lead">Start building with Lumia AI.</p>{error&&<div className="form-error">{error}</div>}<form onSubmit={submit}><div className="field"><label>Your name</label><input value={form.name} onChange={e=>change('name',e.target.value)} placeholder="Test Owner" required/></div><div className="field"><label>Email</label><input type="email" value={form.email} onChange={e=>change('email',e.target.value)} placeholder="you@business.com" required/></div><div className="field"><label>Password</label><input type="password" minLength={8} value={form.password} onChange={e=>change('password',e.target.value)} placeholder="At least 8 characters" required/></div><div className="field"><label>Business name</label><input value={form.businessName} onChange={e=>change('businessName',e.target.value)} placeholder="My Business" required/></div><button className="btn btn-primary auth-submit" disabled={loading}>{loading?'Creating workspace…':'Create workspace'}</button></form><p className="auth-switch">Already have an account? <Link href="/signin">Sign in</Link></p></div></section></main>
+export default function SignUpPage() {
+  const router = useRouter();
+  const [form, setForm] = useState({ name: '', email: '', password: '', businessName: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  function change(key: keyof typeof form, value: string) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const r = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, email: form.email.trim() }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Unable to create account');
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to create account');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="auth-simple">
+      <div className="auth-simple-card auth-signup-card">
+        <Link href="/" className="logo auth-logo" aria-label="Lumia AI home">
+          <span className="logo-mark">L</span>
+          <span className="brand">Lumia<span className="gradient-text"> AI</span></span>
+        </Link>
+
+        <div className="auth-heading">
+          <h1>Create your workspace</h1>
+          <p>Start building with Lumia AI.</p>
+        </div>
+
+        {error && <div className="form-error" role="alert">{error}</div>}
+
+        <form onSubmit={submit}>
+          <div className="field">
+            <label htmlFor="name">Your name</label>
+            <input id="name" value={form.name} onChange={(e) => change('name', e.target.value)} placeholder="Your name" autoComplete="name" required />
+          </div>
+          <div className="field">
+            <label htmlFor="email">Email</label>
+            <input id="email" type="email" value={form.email} onChange={(e) => change('email', e.target.value)} placeholder="you@business.com" autoComplete="email" required />
+          </div>
+          <div className="field">
+            <label htmlFor="password">Password</label>
+            <input id="password" type="password" minLength={8} value={form.password} onChange={(e) => change('password', e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" required />
+          </div>
+          <div className="field">
+            <label htmlFor="businessName">Business name</label>
+            <input id="businessName" value={form.businessName} onChange={(e) => change('businessName', e.target.value)} placeholder="Your business" autoComplete="organization" required />
+          </div>
+          <button className="btn btn-primary auth-submit" disabled={loading}>
+            {loading ? 'Creating workspace…' : 'Create workspace'}
+          </button>
+        </form>
+
+        <p className="auth-switch">Already have an account? <Link href="/signin">Sign in</Link></p>
+      </div>
+    </main>
+  );
 }
