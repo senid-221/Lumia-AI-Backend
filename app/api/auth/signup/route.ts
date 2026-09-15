@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
     const exists = await db.user.findUnique({ where: { email } });
     if (exists) {
-      return NextResponse.json({ error: 'Email already exists' }, { status: 409 });
+      return NextResponse.json({ error: 'Email already exists', code: 'EMAIL_EXISTS' }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(body.password, 12);
@@ -64,10 +64,12 @@ export async function POST(req: Request) {
       },
       { status: 201 },
     );
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.issues?.[0]?.message || 'Invalid request' },
-      { status: 400 },
-    );
+  } catch (error: unknown) {
+    console.error('Lumia signup error', error);
+    if (error instanceof Error && error.name === 'ZodError') {
+      return NextResponse.json({ error: error.message, code: 'VALIDATION_ERROR' }, { status: 400 });
+    }
+    const message = error instanceof Error ? error.message : 'Invalid request';
+    return NextResponse.json({ error: message, code: 'SIGNUP_ERROR' }, { status: 500 });
   }
 }
