@@ -7,14 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { OWNER ADMIN AGENT }
-enum OrderStatus { PENDING CONFIRMED PROCESSING READY DELIVERED CANCELLED }
-enum MessageRole { USER ASSISTANT SYSTEM }
-enum MerchantStatus { PENDING ACTIVE SUSPENDED }
-enum ProductSourceType { MANUAL API CSV PARTNER }
-enum ChannelType { WHATSAPP INSTAGRAM FACEBOOK TIKTOK }
-enum ChannelStatus { DISCONNECTED CONNECTED ERROR }
-enum PayoutStatus { PENDING PROCESSING PAID FAILED }
+enum Role {
+  OWNER
+  ADMIN
+  AGENT
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum MerchantStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum ProductSourceType {
+  MANUAL
+  API
+  CSV
+  PARTNER
+}
+
+enum ChannelType {
+  WHATSAPP
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+}
+
+enum ChannelStatus {
+  DISCONNECTED
+  CONNECTED
+  ERROR
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
 
 model User {
   id           String       @id @default(cuid())
@@ -23,7 +68,7 @@ model User {
   name         String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  memberships  Membership[]
+  memberships Membership[]
   sessions     Session[]
 }
 
@@ -134,7 +179,7 @@ model Product {
 }
 
 model KnowledgeItem {
-  id         String          @id @default(cuid())
+  id         String          @id
   businessId String
   title      String
   content    String
@@ -378,7 +423,7 @@ model SocialLead {
   externalUserId String?
   sourceUrl      String?
   campaign       String?
-  createdAt      DateTime       @default(now())
+  createdAt      DateTime      @default(now())
   business       Business       @relation(fields:[businessId], references:[id], onDelete:Cascade)
   channel        SocialChannel @relation(fields:[channelId], references:[id], onDelete:Cascade)
   customer       Customer?      @relation(fields:[customerId], references:[id], onDelete:SetNull)
