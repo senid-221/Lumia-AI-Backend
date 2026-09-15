@@ -1,0 +1,6 @@
+import { NextResponse } from 'next/server';
+import { getUser } from '@/lib/auth'; import { db } from '@/lib/prisma'; import { z } from 'zod';
+const schema=z.object({name:z.string().min(2).max(150).optional(),instructions:z.string().max(10000).optional(),phone:z.string().max(30).optional(),address:z.string().max(300).optional(),description:z.string().max(3000).optional(),timezone:z.string().max(100).optional()});
+async function membership(userId:string){return db.membership.findFirst({where:{userId},include:{business:true}})}
+export async function GET(){const u=await getUser();if(!u)return NextResponse.json({error:'Unauthorized'},{status:401});const m=await membership(u.id);if(!m)return NextResponse.json({error:'No business access'},{status:403});return NextResponse.json({business:m.business,role:m.role});}
+export async function PATCH(req:Request){const u=await getUser();if(!u)return NextResponse.json({error:'Unauthorized'},{status:401});const m=await membership(u.id);if(!m||!['OWNER','ADMIN'].includes(m.role))return NextResponse.json({error:'Forbidden'},{status:403});try{const b=schema.parse(await req.json());const business=await db.business.update({where:{id:m.businessId},data:b});return NextResponse.json({business});}catch(e:any){return NextResponse.json({error:e?.issues?.[0]?.message||'Invalid request'},{status:400});}}
